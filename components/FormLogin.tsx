@@ -18,7 +18,7 @@ export default function FormLogin() {
     setError('');
 
     try {
-      const res = await fetch('http://localhost:8000/api/login', {
+      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + '/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -32,7 +32,7 @@ export default function FormLogin() {
 
       if (res.ok) {
         const data = await res.json();
-        console.log('Login successful:', data);
+        // console.log('Login successful:', data);
 
         // SIMPAN TOKEN DI SESSION STORAGE
         if (data.authorization && data.authorization.token) {
@@ -46,13 +46,13 @@ export default function FormLogin() {
             data.authorization.expires_in?.toString() || '3600'
           );
 
-          console.log('Token berhasil disimpan di sessionStorage');
+          // console.log('Token berhasil disimpan di sessionStorage');
         }
 
         // Simpan data user jika ada
         if (data.user) {
           sessionStorage.setItem('user', JSON.stringify(data.user));
-          console.log('User data disimpan di sessionStorage');
+          // console.log('User data disimpan di sessionStorage');
         }
 
         router.push('/user');
