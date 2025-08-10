@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import UserCard from '@/components/UserCard';
+import Image from 'next/image';
 
 export default function Page() {
   const [loading, setLoading] = useState(false);
@@ -87,10 +88,12 @@ export default function Page() {
 
             <div className="flex items-center space-x-4">
               <div className="flex items-center">
-                <img
+                <Image
                   className="h-8 w-8 rounded-full"
                   src="https://ui-avatars.com/api/?name=User&background=6366f1&color=fff"
                   alt="Profile"
+                  height={32}
+                  width={32}
                 />
                 <span className="ml-2 text-sm font-medium text-gray-700">
                   Welcome, User!
