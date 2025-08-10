@@ -473,12 +473,41 @@ export default function FormLogin() {
           {/* Footer */}
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              {" Don't have an account?"}
+              {"Don't have an account? "}
               <Link
                 href="/signup"
                 className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors duration-200"
               >
                 Sign up here
+              </Link>
+            </p>
+          </div>
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600">
+              {'Forget Password? '}
+              <Link
+                href="/forget-password"
+                className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors duration-200"
+              >
+                Change Password
+              </Link>
+            </p>
+          </div>
+          <div>
+            <p className="mt-4 text-xs text-gray-500">
+              By signing in, you agree to our{' '}
+              <Link
+                href="/terms"
+                className="text-indigo-600 hover:text-indigo-500 transition-colors duration-200"
+              >
+                Terms of Service
+              </Link>{' '}
+              and{' '}
+              <Link
+                href="/privacy"
+                className="text-indigo-600 hover:text-indigo-500 transition-colors duration-200"
+              >
+                Privacy Policy
               </Link>
             </p>
           </div>
