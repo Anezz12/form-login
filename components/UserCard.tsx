@@ -1,5 +1,6 @@
 'use client';
 import { useUser } from '@/app/hooks/useUser';
+import Image from 'next/image';
 
 export default function UserCard() {
   const { user, loading, error } = useUser();
@@ -20,10 +21,12 @@ export default function UserCard() {
   if (error || !user) {
     return (
       <div className="flex items-center">
-        <img
+        <Image
           className="h-8 w-8 rounded-full"
           src="https://ui-avatars.com/api/?name=Guest&background=6b7280&color=fff"
           alt="Guest Profile"
+          height={32}
+          width={32}
         />
         <span className="ml-2 text-sm font-medium text-gray-700">
           Welcome, Guest!
@@ -34,12 +37,15 @@ export default function UserCard() {
 
   return (
     <div className="flex items-center">
-      <img
+      <Image
         className="h-8 w-8 rounded-full"
-        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
-          user.name
-        )}&background=6366f1&color=fff`}
+        src={
+          user.avatar ||
+          'https://ui-avatars.com/api/?name=User&background=6366f1&color=fff'
+        }
         alt={`${user.name} Profile`}
+        height={32}
+        width={32}
       />
       <span className="ml-2 text-sm font-medium text-gray-700">
         Welcome, {user.name}!, email: {user.email || 'N/A'}
