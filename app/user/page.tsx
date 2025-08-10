@@ -3,13 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import UserCard from '@/components/UserCard';
 
-interface User {
-  id?: string;
-  name: string;
-  email?: string;
-}
-
-export default function Page({ user }: { user: User }) {
+export default function Page() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
