@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -11,6 +11,12 @@ export default function FormLogin() {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+
+  // Handle OAuth callback saat component mount
+  useEffect(() => {
+    handleOAuthCallback();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +38,6 @@ export default function FormLogin() {
 
       if (res.ok) {
         const data = await res.json();
-        // console.log('Login successful:', data);
 
         // SIMPAN TOKEN DI SESSION STORAGE
         if (data.authorization && data.authorization.token) {
@@ -45,14 +50,11 @@ export default function FormLogin() {
             'expires_in',
             data.authorization.expires_in?.toString() || '3600'
           );
-
-          // console.log('Token berhasil disimpan di sessionStorage');
         }
 
         // Simpan data user jika ada
         if (data.user) {
           sessionStorage.setItem('user', JSON.stringify(data.user));
-          // console.log('User data disimpan di sessionStorage');
         }
 
         router.push('/user');
@@ -65,6 +67,103 @@ export default function FormLogin() {
       setError('Network error. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // OAuth Google Login
+  const loginWithGoogle = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(
+        process.env.NEXT_PUBLIC_API_URL + '/auth/google',
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        // Redirect user to OAuth provider
+        window.location.href = data.redirect_url;
+      } else {
+        setError('Failed to initialize Google OAuth');
+      }
+    } catch (error) {
+      console.error('OAuth redirect failed:', error);
+      setError('OAuth redirect failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle OAuth callback
+  const handleOAuthCallback = async () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    const state = urlParams.get('state');
+
+    if (code) {
+      setLoading(true);
+      try {
+        const response = await fetch(
+          process.env.NEXT_PUBLIC_API_URL + '/auth/google/callback',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+            },
+            body: JSON.stringify({
+              code: code,
+              state: state,
+            }),
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+
+          if (data.status === 'success' && data.authorization) {
+            // Store tokens di sessionStorage (konsisten dengan login biasa)
+            sessionStorage.setItem('token', data.authorization.token);
+            sessionStorage.setItem(
+              'token_type',
+              data.authorization.type || 'bearer'
+            );
+            sessionStorage.setItem(
+              'expires_in',
+              data.authorization.expires_in?.toString() || '3600'
+            );
+
+            // Store user data
+            if (data.user) {
+              sessionStorage.setItem('user', JSON.stringify(data.user));
+            }
+
+            // Clean URL dan redirect
+            window.history.replaceState(
+              {},
+              document.title,
+              window.location.pathname
+            );
+            router.push('/user');
+          } else {
+            setError(data.message || 'OAuth login failed');
+          }
+        } else {
+          const errorData = await response.json();
+          setError(errorData.message || 'OAuth callback failed');
+        }
+      } catch (error) {
+        console.error('Error during OAuth callback:', error);
+        setError('OAuth authentication failed');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -118,6 +217,44 @@ export default function FormLogin() {
               </div>
             </div>
           )}
+
+          {/* Google OAuth Button */}
+          <button
+            onClick={loginWithGoogle}
+            disabled={loading}
+            className="w-full flex justify-center items-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 mb-6"
+          >
+            <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+              <path
+                fill="#4285F4"
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+              />
+              <path
+                fill="#34A853"
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+              />
+              <path
+                fill="#EA4335"
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+              />
+            </svg>
+            {loading ? 'Connecting...' : 'Continue with Google'}
+          </button>
+
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">
+                Or continue with email
+              </span>
+            </div>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email Field */}
