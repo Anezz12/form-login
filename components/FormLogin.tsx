@@ -1,4 +1,5 @@
 'use client';
+import Cookies from 'js-cookie';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -12,6 +13,7 @@ export default function FormLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
+  // ...existing code...
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -30,31 +32,26 @@ export default function FormLogin() {
         }),
       });
 
+      const data = await res.json();
+      console.log('API Response:', data); // Debug log
+
       if (res.ok) {
-        const data = await res.json();
+        // Sesuaikan dengan response API Anda
+        const token =
+          data.authorization?.token || data.token || data.access_token;
 
-        // SIMPAN TOKEN DI SESSION STORAGE
-        if (data.authorization && data.authorization.token) {
-          sessionStorage.setItem('token', data.authorization.token);
-          sessionStorage.setItem(
-            'token_type',
-            data.authorization.type || 'bearer'
-          );
-          sessionStorage.setItem(
-            'expires_in',
-            data.authorization.expires_in?.toString() || '3600'
-          );
+        if (token) {
+          // Set cookie menggunakan js-cookie
+          Cookies.set('token', token, { expires: 1, path: '/' });
+          console.log('Token saved:', token);
+
+          // Hanya gunakan satu redirect method
+          router.push('/user');
+        } else {
+          setError('No token received from server');
         }
-
-        // Simpan data user jika ada
-        if (data.user) {
-          sessionStorage.setItem('user', JSON.stringify(data.user));
-        }
-
-        router.push('/user');
       } else {
-        const errorData = await res.json();
-        setError(errorData.message || 'Login failed');
+        setError(data.message || 'Login failed');
       }
     } catch (error) {
       console.error('Error during login:', error);
@@ -68,7 +65,7 @@ export default function FormLogin() {
   const loginWithGoogle = async () => {
     setLoading(true);
     try {
-      const response = await fetch(
+      const res = await fetch(
         process.env.NEXT_PUBLIC_API_URL + '/auth/google',
         {
           method: 'GET',
@@ -79,8 +76,8 @@ export default function FormLogin() {
         }
       );
 
-      if (response.ok) {
-        const data = await response.json();
+      if (res.ok) {
+        const data = await res.json();
         // Redirect user to OAuth provider
         window.location.href = data.redirect_url;
       } else {
@@ -98,7 +95,7 @@ export default function FormLogin() {
   const loginWithGithub = async () => {
     setLoading(true);
     try {
-      const response = await fetch(
+      const res = await fetch(
         process.env.NEXT_PUBLIC_API_URL + '/auth/github',
         {
           method: 'GET',
@@ -108,8 +105,8 @@ export default function FormLogin() {
           },
         }
       );
-      if (response.ok) {
-        const data = await response.json();
+      if (res.ok) {
+        const data = await res.json();
         // Redirect user to OAuth provider
         window.location.href = data.redirect_url;
       } else {

@@ -12,20 +12,22 @@ export default function Page() {
     setLoading(true);
 
     try {
-      const token = sessionStorage.getItem('token');
-      const tokenType = sessionStorage.getItem('token_type') || 'bearer';
+      const token = document.cookie
+        .split('; ')
+        .find((row) => row.startsWith('token='))
+        ?.split('=')[1];
 
       if (token) {
-        // Try to logout via API dengan token dari sessionStorage
         try {
           const res = await fetch('http://localhost:8000/api/logout', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              Authorization: `${tokenType} ${token}`,
+              Authorization: `Bearer ${token}`,
               Accept: 'application/json',
             },
           });
+          console.log(res);
 
           if (res.ok) {
             console.log('API logout successful');
@@ -40,21 +42,22 @@ export default function Page() {
         }
       }
 
-      // Hapus semua data dari sessionStorage
-      sessionStorage.removeItem('token');
-      sessionStorage.removeItem('token_type');
-      console.log('All sessionStorage data cleared');
-      router.push('/');
+      // Hapus cookie token
+      document.cookie = 'token=; path=/; max-age=0';
+      sessionStorage.clear();
+
+      console.log('Cookie and sessionStorage cleared');
+      router.push('/signup');
     } catch (error) {
       console.error('Logout error:', error);
-      // Even on error, clear sessionStorage and redirect
+      document.cookie = 'token=; path=/; max-age=0';
       sessionStorage.clear();
-      router.push('/');
+      router.push('/signup');
     } finally {
       setLoading(false);
     }
   };
-
+  // ...existing code...
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-100">
       {/* Navigation Header */}

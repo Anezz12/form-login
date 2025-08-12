@@ -5,30 +5,44 @@ export const config = {
 };
 
 export default async function middleware(req: NextRequest) {
-  const token = req.cookies.get('access_token')?.value;
+  const token = req.cookies.get('token')?.value;
+  console.log('Middleware token:', token);
 
-  // kalau tidak ada token → redirect login
   if (!token) return redirectToLogin(req);
 
-  // verifikasi ke Laravel (super cepat, 204 kalau valid)
-  const apiBase = process.env.NEXT_PUBLIC_API_BASE!;
-  const res = await fetch(`${apiBase}/api/auth/verify`, {
-    headers: { Authorization: `Bearer ${token}` },
-    // NOTE: jangan kirim credentials lain; cukup header Authorization
-    cache: 'no-store',
-  });
+  const apiBase = process.env.NEXT_PUBLIC_API_URL;
 
-  if (res.ok) return NextResponse.next();
+  try {
+    const res = await fetch(`${apiBase}/user`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store',
+    });
+
+    console.log('API validation status:', res.status); // Debug log
+
+    if (res.ok) {
+      console.log('Token valid, allowing access');
+      return NextResponse.next();
+    }
+
+    console.log('Token invalid, redirecting to login');
+  } catch (error) {
+    console.error('Token validation error:', error);
+  }
 
   // invalid/expired → hapus cookie & redirect
   const resp = redirectToLogin(req);
-  resp.cookies.set('access_token', '', { maxAge: 0, path: '/' });
+  resp.cookies.set('token', '', { maxAge: 0, path: '/' });
   return resp;
 }
 
 function redirectToLogin(req: NextRequest) {
   const url = req.nextUrl.clone();
-  url.pathname = '/';
-  url.searchParams.set('next', req.nextUrl.pathname);
+  url.pathname = '/signup';
   return NextResponse.redirect(url);
 }

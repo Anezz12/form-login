@@ -1,8 +1,9 @@
 'use client';
 import { useUser } from '@/app/hooks/useUser';
 import Image from 'next/image';
-
+import { useRouter, useSearchParams } from 'next/navigation';
 export default function UserCard() {
+  const router = useRouter();
   const { user, loading, error } = useUser();
   console.log('UserCard:', { user, loading, error });
   if (loading) {

@@ -6,6 +6,7 @@ import Link from 'next/link';
 export default function SignupForm() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [role, setRole] = useState('user');
   const [password, setPassword] = useState('');
   const [passwordConfirmation, setPasswordConfirmation] = useState('');
   const [loading, setLoading] = useState(false);
@@ -27,6 +28,7 @@ export default function SignupForm() {
         body: JSON.stringify({
           name,
           email,
+          role,
           password,
           password_confirmation: passwordConfirmation,
         }),
@@ -133,6 +135,20 @@ export default function SignupForm() {
                     />
                   </svg>
                 </div>
+              </div>
+            </div>
+            {/* Role Field */}
+            <div>
+              <div className="relative">
+                <input
+                  type="hidden"
+                  id="name"
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 pl-11 text-black"
+                  placeholder="Enter your name"
+                />
               </div>
             </div>
             {/* Email Field */}
