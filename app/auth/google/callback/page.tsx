@@ -52,25 +52,17 @@ export default function GoogleCallback() {
           if (data.status === 'success' && data.authorization) {
             setStatus('✅ Login successful! Storing credentials...');
 
-            // Store tokens di sessionStorage
-            sessionStorage.setItem('token', data.authorization.token);
-            sessionStorage.setItem(
-              'token_type',
-              data.authorization.type || 'bearer'
-            );
-            sessionStorage.setItem(
-              'expires_in',
-              data.authorization.expires_in?.toString() || '3600'
-            );
+            document.cookie = `token=${
+              data.authorization.token
+            }; path=/; max-age=${data.authorization.expires_in || 3600}`;
 
             // Store user data
-            if (data.user) {
-              sessionStorage.setItem('user', JSON.stringify(data.user));
-            }
+            // if (data.user) {
+            //   sessionStorage.setItem('user', JSON.stringify(data.user));
+            // }
 
             setStatus('🎉 Redirecting to dashboard...');
 
-            // Redirect to user dashboard
             setTimeout(() => {
               router.push('/user');
             }, 1500);

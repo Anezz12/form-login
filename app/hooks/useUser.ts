@@ -1,10 +1,12 @@
 'use client';
+import Cookies from 'js-cookie';
 import { useState, useEffect } from 'react';
 
 interface User {
   id: string;
   name: string;
   email: string;
+  role: string;
   avatar: string;
 }
 
@@ -16,8 +18,7 @@ export function useUser() {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const token = sessionStorage.getItem('token');
-        const tokenType = sessionStorage.getItem('token_type') || 'bearer';
+        const token = Cookies.get('token');
 
         if (!token) {
           setError('No authentication token found');
@@ -31,7 +32,7 @@ export function useUser() {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
-              Authorization: `${tokenType} ${token}`,
+              Authorization: `Bearer ${token}`,
               Accept: 'application/json',
             },
           }

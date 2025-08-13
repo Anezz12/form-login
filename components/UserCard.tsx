@@ -1,9 +1,7 @@
 'use client';
 import { useUser } from '@/app/hooks/useUser';
 import Image from 'next/image';
-import { useRouter, useSearchParams } from 'next/navigation';
 export default function UserCard() {
-  const router = useRouter();
   const { user, loading, error } = useUser();
   console.log('UserCard:', { user, loading, error });
   if (loading) {
@@ -49,7 +47,7 @@ export default function UserCard() {
         width={32}
       />
       <span className="ml-2 text-sm font-medium text-gray-700">
-        Welcome, {user.name}!, email: {user.email || 'N/A'}
+        Welcome, {user.name}!, email: {user.email || 'N/A'}, Role: {user.role}
       </span>
     </div>
   );
