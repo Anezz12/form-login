@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import UserCard from '@/components/UserCard';
 import Image from 'next/image';
+import Cookies from 'js-cookie';
 
 export default function Page() {
   const [loading, setLoading] = useState(false);
@@ -12,10 +13,7 @@ export default function Page() {
     setLoading(true);
 
     try {
-      const token = document.cookie
-        .split('; ')
-        .find((row) => row.startsWith('token='))
-        ?.split('=')[1];
+      const token = Cookies.get('token');
 
       if (token) {
         try {
@@ -47,12 +45,12 @@ export default function Page() {
       sessionStorage.clear();
 
       console.log('Cookie and sessionStorage cleared');
-      router.push('/signup');
+      router.push('/');
     } catch (error) {
       console.error('Logout error:', error);
       document.cookie = 'token=; path=/; max-age=0';
       sessionStorage.clear();
-      router.push('/signup');
+      router.push('/');
     } finally {
       setLoading(false);
     }
