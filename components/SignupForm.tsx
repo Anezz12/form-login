@@ -14,11 +14,26 @@ export default function SignupForm() {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
+  const validateForm = (): boolean => {
+    if (password.length < 8) {
+      setError('Password harus minimal 8 karakter');
+      return false;
+    }
+
+    if (password !== passwordConfirmation) {
+      setError('Konfirmasi kata sandi tidak cocok');
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
 
+    if (!validateForm()) return;
+    setError('');
+    setLoading(true);
     try {
       const res = await fetch(process.env.NEXT_PUBLIC_API_URL + '/register', {
         method: 'POST',
@@ -37,14 +52,23 @@ export default function SignupForm() {
       if (res.ok) {
         const data = await res.json();
         console.log('Signup successful:', data);
-        router.push('/user');
-      } else {
-        const errorData = await res.json();
-        setError(errorData.message || 'Signup failed');
+
+        if (data.status === 'success' && data.authorization) {
+          document.cookie = `token=${
+            data.authorization.token
+          }; path=/; max-age=${data.authorization.expires_in || 3600}`;
+
+          router.push('/user');
+
+          console.log('Token stored in cookies');
+        } else {
+          const errorData = await res.json();
+          setError(errorData.message || 'Signup failed');
+        }
       }
     } catch (error) {
       console.error('Error during signup:', error);
-      setError('Network error. Please try again.');
+      setError('Network error');
     } finally {
       setLoading(false);
     }

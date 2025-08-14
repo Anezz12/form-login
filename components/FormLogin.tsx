@@ -13,7 +13,6 @@ export default function FormLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
-  // ...existing code...
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -396,7 +395,7 @@ export default function FormLogin() {
             </div>
 
             {/* Password Confirmation Field */}
-            <div>
+            {/* <div>
               <label
                 htmlFor="password_confirmation"
                 className="block text-sm font-medium text-gray-700 mb-2"
@@ -429,7 +428,7 @@ export default function FormLogin() {
                   </svg>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             {/* Submit Button */}
             <button
