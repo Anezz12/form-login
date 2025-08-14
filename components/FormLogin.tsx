@@ -7,7 +7,6 @@ import Link from 'next/link';
 export default function FormLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [passwordConfirmation, setPasswordConfirmation] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -27,7 +26,6 @@ export default function FormLogin() {
         body: JSON.stringify({
           email,
           password,
-          password_confirmation: passwordConfirmation,
         }),
       });
 
@@ -35,7 +33,6 @@ export default function FormLogin() {
       console.log('API Response:', data); // Debug log
 
       if (res.ok) {
-        // Sesuaikan dengan response API Anda
         const token =
           data.authorization?.token || data.token || data.access_token;
 
@@ -393,42 +390,6 @@ export default function FormLogin() {
                 </button>
               </div>
             </div>
-
-            {/* Password Confirmation Field */}
-            {/* <div>
-              <label
-                htmlFor="password_confirmation"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Confirm Password
-              </label>
-              <div className="relative">
-                <input
-                  type="password"
-                  id="password_confirmation"
-                  value={passwordConfirmation}
-                  onChange={(e) => setPasswordConfirmation(e.target.value)}
-                  required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 pl-11 text-black"
-                  placeholder="Confirm your password"
-                />
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg
-                    className="h-5 w-5 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div> */}
 
             {/* Submit Button */}
             <button

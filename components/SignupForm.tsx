@@ -1,4 +1,5 @@
 'use client';
+import Cookies from 'js-cookie';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -49,22 +50,28 @@ export default function SignupForm() {
         }),
       });
 
+      const data = await res.json();
+      console.log('API Response:', data); // Debug log
+
       if (res.ok) {
-        const data = await res.json();
-        console.log('Signup successful:', data);
+        const token =
+          data.authorization?.token || data.token || data.access_token;
 
-        if (data.status === 'success' && data.authorization) {
-          document.cookie = `token=${
-            data.authorization.token
-          }; path=/; max-age=${data.authorization.expires_in || 3600}`;
+        if (token) {
+          // Set cookie menggunakan js-cookie
+          Cookies.set('token', token, { expires: 1, path: '/' });
+          console.log('Token saved:', token);
 
+          // Hanya gunakan satu redirect method
           router.push('/user');
-
-          console.log('Token stored in cookies');
         } else {
-          const errorData = await res.json();
-          setError(errorData.message || 'Signup failed');
+          setError('Login gagal mohon coba lagi');
         }
+
+        console.log('Token stored in cookies');
+      } else {
+        const errorData = data;
+        setError(errorData.message || 'Signup failed');
       }
     } catch (error) {
       console.error('Error during signup:', error);
