@@ -12,34 +12,23 @@ export default function SignupForm() {
   const [passwordConfirmation, setPasswordConfirmation] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
-  const validateForm = (): boolean => {
-    if (password.length < 8) {
-      setError('Password harus minimal 8 karakter');
-      return false;
-    }
-
-    if (password !== passwordConfirmation) {
-      setError('Konfirmasi kata sandi tidak cocok');
-      return false;
-    }
-
-    return true;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validateForm()) return;
-    setError('');
     setLoading(true);
+    setError('');
+    setErrors({});
+
     try {
       const res = await fetch(process.env.NEXT_PUBLIC_API_URL + '/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Accept: 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
         },
         body: JSON.stringify({
           name,
@@ -51,34 +40,35 @@ export default function SignupForm() {
       });
 
       const data = await res.json();
-      console.log('API Response:', data); // Debug log
 
       if (res.ok) {
         const token =
           data.authorization?.token || data.token || data.access_token;
 
         if (token) {
-          // Set cookie menggunakan js-cookie
           Cookies.set('token', token, { expires: 1, path: '/' });
-          console.log('Token saved:', token);
-
-          // Hanya gunakan satu redirect method
           router.push('/user');
         } else {
-          setError('Login gagal mohon coba lagi');
+          setError('Registration successful but no token received');
         }
-
-        console.log('Token stored in cookies');
+      } else if (res.status === 422 && data.errors) {
+        // Handle validation errors - simpan semua errors
+        setErrors(data.errors);
+        setError(data.message || 'Please fix the validation errors below');
       } else {
-        const errorData = data;
-        setError(errorData.message || 'Signup failed');
+        setError(data.message || `Error ${res.status}: ${res.statusText}`);
       }
     } catch (error) {
-      console.error('Error during signup:', error);
+      console.error('🔥 Fetch error:', error);
       setError('Network error');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper function untuk menampilkan error per field
+  const getFieldError = (fieldName: string) => {
+    return errors[fieldName] ? errors[fieldName][0] : null;
   };
 
   return (
@@ -102,9 +92,9 @@ export default function SignupForm() {
             </svg>
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome Back
+            Create Account
           </h2>
-          <p className="text-gray-600">Please sign in to your account</p>
+          <p className="text-gray-600">Please fill in your details</p>
         </div>
 
         {/* Form Card */}
@@ -131,7 +121,6 @@ export default function SignupForm() {
               </div>
             </div>
           )}
-
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Name Field */}
             <div>
@@ -148,7 +137,9 @@ export default function SignupForm() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 pl-11 text-black"
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 pl-11 text-black ${
+                    getFieldError('name') ? 'border-red-300' : 'border-gray-300'
+                  }`}
                   placeholder="Enter your name"
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -167,21 +158,13 @@ export default function SignupForm() {
                   </svg>
                 </div>
               </div>
+              {getFieldError('name') && (
+                <p className="mt-1 text-sm text-red-600">
+                  {getFieldError('name')}
+                </p>
+              )}
             </div>
-            {/* Role Field */}
-            <div>
-              <div className="relative">
-                <input
-                  type="hidden"
-                  id="name"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 pl-11 text-black"
-                  placeholder="Enter your name"
-                />
-              </div>
-            </div>
+
             {/* Email Field */}
             <div>
               <label
@@ -197,7 +180,11 @@ export default function SignupForm() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 pl-11 text-black"
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 pl-11 text-black ${
+                    getFieldError('email')
+                      ? 'border-red-300'
+                      : 'border-gray-300'
+                  }`}
                   placeholder="Enter your email"
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -216,6 +203,11 @@ export default function SignupForm() {
                   </svg>
                 </div>
               </div>
+              {getFieldError('email') && (
+                <p className="mt-1 text-sm text-red-600">
+                  {getFieldError('email')}
+                </p>
+              )}
             </div>
 
             {/* Password Field */}
@@ -233,7 +225,11 @@ export default function SignupForm() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 pl-11 pr-11 text-black"
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 pl-11 pr-11 text-black ${
+                    getFieldError('password')
+                      ? 'border-red-300'
+                      : 'border-gray-300'
+                  }`}
                   placeholder="Enter your password"
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -280,6 +276,11 @@ export default function SignupForm() {
                   </svg>
                 </button>
               </div>
+              {getFieldError('password') && (
+                <p className="mt-1 text-sm text-red-600">
+                  {getFieldError('password')}
+                </p>
+              )}
             </div>
 
             {/* Password Confirmation Field */}
@@ -297,7 +298,11 @@ export default function SignupForm() {
                   value={passwordConfirmation}
                   onChange={(e) => setPasswordConfirmation(e.target.value)}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 pl-11 text-black"
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 pl-11 text-black ${
+                    getFieldError('password_confirmation')
+                      ? 'border-red-300'
+                      : 'border-gray-300'
+                  }`}
                   placeholder="Confirm your password"
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -316,7 +321,19 @@ export default function SignupForm() {
                   </svg>
                 </div>
               </div>
+              {getFieldError('password_confirmation') && (
+                <p className="mt-1 text-sm text-red-600">
+                  {getFieldError('password_confirmation')}
+                </p>
+              )}
             </div>
+
+            {/* Hidden Role Field */}
+            <input
+              type="hidden"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+            />
 
             {/* Submit Button */}
             <button
@@ -346,10 +363,10 @@ export default function SignupForm() {
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     ></path>
                   </svg>
-                  Signing in...
+                  Creating Account...
                 </div>
               ) : (
-                'Sign In'
+                'Create Account'
               )}
             </button>
           </form>
@@ -357,7 +374,7 @@ export default function SignupForm() {
           {/* Footer */}
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              {" Don't have an account?"}
+              Already have an account?{' '}
               <Link
                 href="/"
                 className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors duration-200"
